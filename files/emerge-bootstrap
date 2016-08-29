@@ -5,7 +5,7 @@ use File::Copy;
 use File::Path 'make_path';
 use feature 'say';
 
-sub exiting { say 'OK. Exiting..'; exit 0 }
+sub setgitcfg { say 'Something wrong with changing gitconfig' if system 'git config --global url.git://anongit.kde.org/.insteadOf "kde:"' }
 
 say "The directory where to create kderoot [$ENV{'HOME'}]:";
 chomp (my $path = <>);
@@ -14,14 +14,14 @@ chdir $path or die "chdir:$!";
 mkdir 'kderoot' or die "mkdir:$!";
 chdir 'kderoot' or die "mkdir:$!";
 mkdir 'etc' or die "mkdir:$!";
-die 'git clone error' if my $ret = system 'git clone git://anongit.kde.org/emerge.git';
+die 'git clone error' if system 'git clone git://anongit.kde.org/emerge.git';
 say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo) [RelWithDebInfo]:';
 while(<>) {
     chomp;
-    if (! $_) { copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!"; last } 
-    if (/^(Release|RelWithDebInfo|Debug|MinSizeRel)$/) {
+    if (! $_ or /^RelWithDebInfo$/) { copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!"; last } 
+    if (/^(?:Release|Debug|MinSizeRel)$/) {
         my $type = $_;
-        open my $ini, 'emerge/kdesettings.ini' or die "open:$!";
+        open my $ini, 'emerge/kdesettings.fbsd' or die "open:$!";
         open my $finini, '>etc/kdesettings.ini' or die "open:$!";
         while(<$ini>) {
             s/(=\s)RelWithDebInfo/$1$type/;
@@ -31,27 +31,10 @@ while(<>) {
     }
     say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo) [RelWithDebInfo]:';
 }
-my $gcpath = $ENV{'HOME'} . '/.gitconfig';
-my $section = "[url \"git://anongit.kde.org\/\"]";
-if (! -e $gcpath) {
-	open my $gitcfg, '>', $gcpath or die "OPEN:$!";
-	print $gitcfg $section . "\ninsteadOf = kde:\n";
-	exiting
+chomp (my $out = `git config --global --get url.git://anongit.kde.org/.insteadOf`);
+if (! $out) { setgitcfg } else {
+    exit 0 if $out eq 'kde:';
+    say "The insteadOf parameter of your gitconfig is \"$out\" but it should be \"kde:\"\nSet it to \"kde:\"?[yes]";
+    chomp (my $set = <>);
+    setgitcfg if ! $set or $set =~ /^(?:yes|y)$/i
 }
-open my $gitcfg, $gcpath or die "OPEN:$!";
-my $gitini = join '', <$gitcfg>;
-close $gitcfg or die "CLOSE:$!";
-if ($gitini !~ /\[url\s\"git:\/\/anongit\.kde\.org\/\"\]/s) {
-    open my $gitcfg, '>>', $gcpath or die "OPEN:$!";
-	print $gitcfg $section . "\ninsteadOf = kde:\n";
-	exiting 
-}
-if ($gitini =~ /\[url \"git:\/\/anongit\.kde\.org\/\"\](.*?)(?:\[|$)/s) {
-    if ($1 =~ /(insteadOf\s*=\s*.*?)(?:\n|$)/s) {
-        say "WARNING: In [url \"git://anongit.kde.org/\"] block of ~/.gitconfig you have '$1' but it should be 'insteadOf = kde:'" if $1 !~ /insteadOf\s*=\s*kde:\s*/;
-        exiting
-    } else { $gitini =~ s/(\[url \"git:\/\/anongit\.kde\.org\/\"\])/$1\ninsteadOf = kde:\n/ }
-}
-open $gitcfg, '>', $gcpath or die "OPEN:$!";
-print $gitcfg $gitini;
-exiting
