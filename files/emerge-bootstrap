@@ -7,34 +7,48 @@ use feature 'say';
 
 sub setgitcfg { say 'Something wrong with changing gitconfig' if system 'git config --global url.git://anongit.kde.org/.insteadOf "kde:"' }
 
-say "The directory where to create kderoot [$ENV{'HOME'}]:";
+say "The directory to act as Emerge root: [$ENV{'HOME'}/kderoot]";
 chomp (my $path = <>);
-if (! $path) { $path = $ENV{'HOME'} } elsif (! -e $path) { make_path $path or die "mkdir:$!" }
-chdir $path or die "chdir:$!";
-mkdir 'kderoot' or die "mkdir:$!";
-chdir 'kderoot' or die "mkdir:$!";
-mkdir 'etc' or die "mkdir:$!";
+
+if (! $path) {
+    $path = "$ENV{'HOME'}/kderoot"
+}
+elsif (! -e $path) {
+    make_path $path or die "mkdir:$!"
+}
+
+chdir $path;
+
 die 'git clone error' if system 'git clone git://anongit.kde.org/emerge.git';
-say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo) [RelWithDebInfo]:';
+chdir 'emerge';
+system 'git checkout unix3';
+chdir '..';
+
+mkdir 'etc' ;
+
+say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo): [RelWithDebInfo]';
 while(<>) {
     chomp;
     if (! $_ or /^RelWithDebInfo$/) { copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!"; last } 
     if (/^(?:Release|Debug|MinSizeRel)$/) {
         my $type = $_;
-        open my $ini, 'emerge/kdesettings.fbsd' or die "open:$!";
-        open my $finini, '>etc/kdesettings.ini' or die "open:$!";
+        open my $ini, 'emerge/kdesettings.fbsd';
+        open my $finini, '>etc/kdesettings.ini';
         while(<$ini>) {
             s/(=\s)RelWithDebInfo/$1$type/;
             print $finini $_
         }
         last
     }
-    say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo) [RelWithDebInfo]:';
+    say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo): [RelWithDebInfo]';
 }
+
 chomp (my $out = `git config --global --get url.git://anongit.kde.org/.insteadOf`);
-if (! $out) { setgitcfg } else {
+if (! $out) {
+    setgitcfg
+} else {
     exit 0 if $out eq 'kde:';
-    say "The insteadOf parameter of your gitconfig is \"$out\" but it should be \"kde:\"\nSet it to \"kde:\"?[yes]";
+    say "The insteadOf parameter of your gitconfig is \"$out\" but it should be \"kde:\"\nSet it to \"kde:\"? [yes]";
     chomp (my $set = <>);
     setgitcfg if ! $set or $set =~ /^(?:yes|y)$/i
 }
