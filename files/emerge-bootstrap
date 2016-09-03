@@ -9,29 +9,22 @@ sub setgitcfg { say 'Something wrong with changing gitconfig' if system 'git con
 
 say "The directory to act as Emerge root: [$ENV{'HOME'}/kderoot]";
 chomp (my $path = <>);
-
-if (! $path) {
-    $path = "$ENV{'HOME'}/kderoot"
-}
-elsif (! -e $path) {
-    make_path $path or die "mkdir:$!"
-}
-
+$path = $ENV{'HOME'} if ! $path;
+$path .= '/kderoot';
+make_path $path;
 chdir $path;
 
 die 'git clone error' if system 'git clone git://anongit.kde.org/emerge.git';
 chdir 'emerge';
-system 'git checkout unix3';
+say `git checkout unix3`;
 chdir '..';
-
 mkdir 'etc' ;
 
-say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo): [RelWithDebInfo]';
-while(<>) {
-    chomp;
-    if (! $_ or /^RelWithDebInfo$/) { copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!"; last } 
-    if (/^(?:Release|Debug|MinSizeRel)$/) {
-        my $type = $_;
+while(1) {
+    say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo): [RelWithDebInfo]';
+    chomp (my $type = <>);
+    if (! $type or $type eq 'RelWithDebInfo') { copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!"; last } 
+    if ($type =~ /^(?:Release|Debug|MinSizeRel)$/) {
         open my $ini, 'emerge/kdesettings.fbsd';
         open my $finini, '>etc/kdesettings.ini';
         while(<$ini>) {
@@ -40,7 +33,6 @@ while(<>) {
         }
         last
     }
-    say 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo): [RelWithDebInfo]';
 }
 
 chomp (my $out = `git config --global --get url.git://anongit.kde.org/.insteadOf`);
