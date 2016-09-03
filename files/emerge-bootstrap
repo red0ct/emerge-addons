@@ -9,8 +9,7 @@ sub setgitcfg { say 'Something wrong with changing gitconfig' if system 'git con
 
 say "The directory to act as Emerge root: [$ENV{'HOME'}/kderoot]";
 chomp (my $path = <>);
-$path = $ENV{'HOME'} if ! $path;
-$path .= '/kderoot';
+$path = "$ENV{'HOME'}/kderoot" if ! $path;
 make_path $path;
 chdir $path;
 
