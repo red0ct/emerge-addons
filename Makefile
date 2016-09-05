@@ -1,12 +1,12 @@
 # $FreeBSD$
 
-PORTNAME=       kde-emerge
-PORTVERSION=    1
-CATEGORIES=     ports-mgmt kde
+PORTNAME=	kde-emerge
+PORTVERSION=	1
+CATEGORIES=	ports-mgmt kde devel
 DISTFILES=	# none
 
-MAINTAINER=     6yearold@gmail.com
-COMMENT=        Meta-port to build all emerge dependencies
+MAINTAINER=	6yearold@gmail.com
+COMMENT=	Meta-port to build all emerge dependencies
 
 LIB_DEPENDS=	libicui18n.so:devel/icu \
 		libpcre.so:devel/pcre \
@@ -33,7 +33,7 @@ RUN_DEPENDS=	py35-sqlite3>=0:databases/py35-sqlite3 \
 		xkeyboard-config>=0:x11/xkeyboard-config \
 		xorg-fonts>=0:x11-fonts/xorg-fonts
 
-USES=           cmake python:2,3.5 execinfo gmake pkgconfig gettext bison:run shared-mime-info
+USES=		cmake python:2,3.5 execinfo gmake pkgconfig gettext bison:run shared-mime-info
 USE_GNOME=	glib20 libxslt
 USE_RUBY=	yes
 NO_BUILD=	yes
@@ -42,6 +42,7 @@ CONFLICTS=	qt5-*
 
 PLIST_FILES=	bin/emerge-bootstrap
 
+# stub out configure target produced by USES=cmake
 do-configure:
 	@${DO_NADA}
 
