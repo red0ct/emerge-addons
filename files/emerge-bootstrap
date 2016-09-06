@@ -5,9 +5,7 @@ use File::Copy;
 use File::Path 'make_path';
 use feature 'say';
 
-sub setgitcfg { say 'Something wrong with changing gitconfig' if system 'git config --global url.git://anongit.kde.org/.insteadOf "kde:"' }
-
-my ($change_git_config, $copy_emerge_config, $rewrite_emerge_config, $build_type);
+my ($change_git_config, $change_emerge_config, $build_type);
 
 print "Enter the directory to act as Emerge root: [$ENV{'HOME'}/kderoot] ";
 chomp (my $kderoot_path = <>);
@@ -15,7 +13,7 @@ $kderoot_path = "$ENV{'HOME'}/kderoot" if ! $kderoot_path;
 
 chomp (my $out = `git config --global --get url.git://anongit.kde.org/.insteadOf`);
 if (! $out) {
-    ++$change_git_config;
+    ++$change_git_config
 } elsif ($out ne 'kde:') {
         print "The insteadOf parameter of your ~/.gitconfig is \"$out\" but it should be \"kde:\"\nSet it to \"kde:\"? [yes] ";
         chomp (my $set = <>);
@@ -25,14 +23,14 @@ if (! $out) {
 while (1) {
     print 'Select BuildType (Release/Debug/MinSizeRel/RelWithDebInfo): [RelWithDebInfo] ';
     chomp ($build_type = <>);
-    if (! $build_type or $build_type eq 'RelWithDebInfo') { ++$copy_emerge_config; last } 
-    if ($build_type =~ /^(?:Release|Debug|MinSizeRel)$/) { ++$rewrite_emerge_config; last }
+    last if ! $build_type or $build_type eq 'RelWithDebInfo'; 
+    ++$change_emerge_config and last if $build_type =~ /^(?:Release|Debug|MinSizeRel)$/
 }
 
 make_path $kderoot_path;
 chdir $kderoot_path;
 
-setgitcfg if $change_git_config;
+say 'Something wrong with changing gitconfig' if $change_git_config and system 'git config --global url.git://anongit.kde.org/.insteadOf "kde:"'; 
 
 die 'git clone error' if system 'git clone git://anongit.kde.org/emerge.git';
 chdir 'emerge';
@@ -40,14 +38,15 @@ say `git checkout unix3`;
 chdir '..';
 mkdir 'etc' ;
 
-if ($copy_emerge_config) { copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!" }
-if ($rewrite_emerge_config) {
+if ($change_emerge_config) {
     open my $ini, 'emerge/kdesettings.fbsd';
     open my $finini, '>etc/kdesettings.ini';
     while (<$ini>) {
         s/(=\s)RelWithDebInfo/$1$build_type/;
         print $finini $_
     }
+} else {
+    copy 'emerge/kdesettings.fbsd', 'etc/kdesettings.ini' or die "copy:$!" 
 }
 
-say "Bootstrapping done. Now start bash and run \"source $kderoot_path/emerge/kdeenv.sh";
+say "Bootstrapping done. Now start bash and run \"source $kderoot_path/emerge/kdeenv.sh\"";
