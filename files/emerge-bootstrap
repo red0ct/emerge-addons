@@ -15,9 +15,9 @@ chomp (my $out = `git config --global --get url.git://anongit.kde.org/.insteadOf
 if (! $out) {
     ++$change_git_config
 } elsif ($out ne 'kde:') {
-        print "The insteadOf parameter of your ~/.gitconfig is \"$out\" but it should be \"kde:\"\nSet it to \"kde:\"? [yes] ";
-        chomp (my $set = <>);
-        ++$change_git_config if ! $set or $set =~ /^(?:yes|y)$/i
+    print "The insteadOf parameter of your ~/.gitconfig is \"$out\" but it should be \"kde:\"\nSet it to \"kde:\"? [yes] ";
+    chomp (my $set = <>);
+    ++$change_git_config if ! $set or $set =~ /^(?:yes|y)$/i
 }
 
 while (1) {
