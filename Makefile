@@ -27,24 +27,23 @@ RUN_DEPENDS=	py35-sqlite3>=0:databases/py35-sqlite3 \
 		inputproto>=0:x11/inputproto \
 		bash:shells/bash \
 		git:devel/git \
+		cmake:devel/cmake \
 		7za:archivers/p7zip \
 		p5-URI>=0:net/p5-URI \
 		python:lang/python \
 		xkeyboard-config>=0:x11/xkeyboard-config \
 		xorg-fonts>=0:x11-fonts/xorg-fonts
 
-USES=		cmake python:2,3.5 execinfo gmake pkgconfig gettext bison:run shared-mime-info
-USE_GNOME=	glib20 libxslt
-USE_RUBY=	yes
-NO_BUILD=	yes
+USES=			python:2,3.5,run execinfo gmake pkgconfig:run \
+			gettext-tools:run gettext-runtime:run bison:run shared-mime-info
+USE_GNOME=		glib20 libxslt
+USE_RUBY=		yes
+RUBY_NO_BUILD_DEPENDS=	yes
+NO_BUILD=		yes
 
-CONFLICTS=	qt5-*
+CONFLICTS=		qt5-*
 
-PLIST_FILES=	bin/emerge-bootstrap
-
-# stub out configure target produced by USES=cmake
-do-configure:
-	@${DO_NADA}
+PLIST_FILES=		bin/emerge-bootstrap
 
 do-install:
 	${INSTALL_SCRIPT} ${FILESDIR}/emerge-bootstrap   ${STAGEDIR}${PREFIX}/bin
