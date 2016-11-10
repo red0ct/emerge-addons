@@ -33,9 +33,6 @@ chdir $kderoot_path;
 say 'Something wrong with changing gitconfig' if $change_git_config and system 'git config --global url.git://anongit.kde.org/.insteadOf "kde:"'; 
 
 die 'git clone error' if system 'git clone git://anongit.kde.org/emerge.git';
-chdir 'emerge';
-say `git checkout unix3`;
-chdir '..';
 mkdir 'etc' ;
 
 if ($change_emerge_config) {
